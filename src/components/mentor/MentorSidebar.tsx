@@ -21,8 +21,19 @@ const links = [
   { href: "/mentor/roadmap", label: "Roadmap", icon: Map },
 ]
 
+import { useEffect, useState } from "react"
+
 export default function MentorSidebar({ mentorName, mentorEmail }: MentorSidebarProps) {
   const pathname = usePathname()
+  const [csrfToken, setCsrfToken] = useState<string | null>(null)
+
+  useEffect(() => {
+    let mounted = true
+    fetch('/api/auth/csrf').then(r => r.json()).then(j => {
+      if (mounted) setCsrfToken(j?.csrfToken ?? null)
+    }).catch(() => {})
+    return () => { mounted = false }
+  }, [])
 
   return (
     <aside className="hidden md:flex flex-col w-64 bg-base-900 border-r border-base-600 h-screen sticky top-0 shrink-0">
@@ -71,6 +82,7 @@ export default function MentorSidebar({ mentorName, mentorEmail }: MentorSidebar
             MENTOR
           </span>
           <form action="/api/auth/signout" method="POST">
+            {csrfToken && <input type="hidden" name="csrfToken" value={csrfToken} />}
             <button type="submit" className="p-1.5 text-text-tertiary hover:text-danger-400 rounded-lg hover:bg-base-700 transition-colors">
               <LogOut className="w-4 h-4" />
             </button>

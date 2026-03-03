@@ -18,8 +18,19 @@ const links = [
   { href: "/intern/attendance", label: "Mi Asistencia", icon: Calendar },
 ]
 
+import { useEffect, useState } from "react"
+
 export default function InternSidebar({ internName, internEmail }: InternSidebarProps) {
   const pathname = usePathname()
+  const [csrfToken, setCsrfToken] = useState<string | null>(null)
+
+  useEffect(() => {
+    let mounted = true
+    fetch('/api/auth/csrf').then(r => r.json()).then(j => {
+      if (mounted) setCsrfToken(j?.csrfToken ?? null)
+    }).catch(() => {})
+    return () => { mounted = false }
+  }, [])
 
   return (
     <>
@@ -70,6 +81,7 @@ export default function InternSidebar({ internName, internEmail }: InternSidebar
               INTERN
             </span>
             <form action="/api/auth/signout" method="POST">
+              {csrfToken && <input type="hidden" name="csrfToken" value={csrfToken} />}
               <button type="submit" className="p-1.5 text-text-tertiary hover:text-danger-400 rounded-lg hover:bg-base-700 transition-colors">
                 <LogOut className="w-4 h-4" />
               </button>
