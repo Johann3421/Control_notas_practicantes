@@ -1,5 +1,4 @@
 import NextAuth from "next-auth"
-import { PrismaAdapter } from "@auth/prisma-adapter"
 import Credentials from "next-auth/providers/credentials"
 import bcrypt from "bcryptjs"
 import { prisma } from "./prisma"
@@ -11,7 +10,6 @@ const credentialsSchema = z.object({
 })
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
-  adapter: PrismaAdapter(prisma) as never,
   providers: [
     Credentials({
       credentials: {
@@ -23,19 +21,13 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         if (!parsed.success) return null
 
         const email = parsed.data.email.trim().toLowerCase()
-          console.info('[auth] authorize: attempting sign-in for', email)
-          const user = await prisma.user.findUnique({
+        const user = await prisma.user.findUnique({
           where: { email },
           include: { internProfile: true },
         })
-          console.info('[auth] authorize: user found?', !!user, 'id=', user?.id, 'role=', user?.role, 'hasPassword=', !!user?.password)
-          if (!user?.password) {
-            console.info('[auth] authorize: missing password for user', email)
-            return null
-          }
+        if (!user?.password) return null
 
         const valid = await bcrypt.compare(parsed.data.password, user.password)
-        console.info('[auth] authorize: password valid?', valid)
         if (!valid) return null
 
         return {

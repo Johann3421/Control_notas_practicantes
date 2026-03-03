@@ -12,5 +12,6 @@ export default async function Home() {
     redirect("/intern")
   }
 
+  // ADMIN and MENTOR both use the mentor dashboard
   redirect("/mentor")
 }
