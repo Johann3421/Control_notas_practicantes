@@ -12,7 +12,10 @@ if [ -z "$DATABASE_URL" ]; then
 fi
 
 echo "▶  Applying database schema (prisma db push)..."
-node node_modules/prisma/build/index.js db push --skip-generate --accept-data-loss
+# Use the prisma CLI without unsupported flags. Prefer the installed binary
+# (symlinked to /usr/local/bin/prisma during image build) so it works in
+# the minimal runner image. Accept data-loss explicitly for CI/deploy flows.
+prisma db push --accept-data-loss
 echo "✔  Schema applied."
 
 echo "▶  Starting Next.js server on port ${PORT:-3000}..."
