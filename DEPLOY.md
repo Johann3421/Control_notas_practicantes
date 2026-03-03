@@ -106,7 +106,11 @@ Ejecuta el seed **una sola vez** después del primer despliegue exitoso.
 En Dokploy → servicio → pestaña **Terminal**, selecciona el contenedor `app`:
 
 ```bash
-node node_modules/tsx/dist/cli.mjs prisma/seed.ts
+# From inside the `app` container (recommended):
+npm run seed
+
+# Or from the host using Docker Compose (works with /bin/sh):
+docker compose exec app sh -c "npm run seed"
 ```
 
 Esto crea el usuario mentor inicial con las credenciales definidas en `prisma/seed.ts`.
