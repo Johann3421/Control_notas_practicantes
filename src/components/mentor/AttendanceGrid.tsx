@@ -132,7 +132,24 @@ export default function AttendanceGrid({
                       <input
                         type="time"
                         value={row.clockIn ?? ""}
-                        onChange={(e) => onRowChange(row.internId, { clockIn: e.target.value })}
+                        onChange={(e) => {
+                          const clockIn = e.target.value
+                          const updates: Partial<InternRow> = { clockIn }
+                          // Auto-calculate hours worked
+                          if (clockIn && row.clockOut) {
+                            const [ih, im] = clockIn.split(":").map(Number)
+                            const [oh, om] = row.clockOut.split(":").map(Number)
+                            const diff = (oh * 60 + om - ih * 60 - im) / 60
+                            if (diff > 0) updates.hoursWorked = Math.round(diff * 100) / 100
+                          }
+                          // Auto-calculate late minutes (standard start 09:00)
+                          if (clockIn && row.status === "LATE") {
+                            const [ih, im] = clockIn.split(":").map(Number)
+                            const late = ih * 60 + im - 9 * 60
+                            updates.lateMinutes = late > 0 ? late : 0
+                          }
+                          onRowChange(row.internId, updates)
+                        }}
                         className="bg-base-700 border border-base-600 text-text-primary rounded-lg px-2 py-1.5 text-xs font-mono outline-none focus:border-electric-500"
                       />
                     </td>
@@ -140,7 +157,18 @@ export default function AttendanceGrid({
                       <input
                         type="time"
                         value={row.clockOut ?? ""}
-                        onChange={(e) => onRowChange(row.internId, { clockOut: e.target.value })}
+                        onChange={(e) => {
+                          const clockOut = e.target.value
+                          const updates: Partial<InternRow> = { clockOut }
+                          // Auto-calculate hours worked
+                          if (row.clockIn && clockOut) {
+                            const [ih, im] = row.clockIn.split(":").map(Number)
+                            const [oh, om] = clockOut.split(":").map(Number)
+                            const diff = (oh * 60 + om - ih * 60 - im) / 60
+                            if (diff > 0) updates.hoursWorked = Math.round(diff * 100) / 100
+                          }
+                          onRowChange(row.internId, updates)
+                        }}
                         className="bg-base-700 border border-base-600 text-text-primary rounded-lg px-2 py-1.5 text-xs font-mono outline-none focus:border-electric-500"
                       />
                     </td>
