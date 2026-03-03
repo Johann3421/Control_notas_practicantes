@@ -58,16 +58,10 @@ COPY --from=builder --chown=nextjs:nodejs /app/src/generated ./src/generated
 COPY --from=builder /app/prisma          ./prisma
 COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 
-# ── Prisma CLI + pg driver (from prod deps) ────────────────────────────────
-COPY --from=prod-deps /app/node_modules/prisma          ./node_modules/prisma
-COPY --from=prod-deps /app/node_modules/@prisma         ./node_modules/@prisma
-COPY --from=prod-deps /app/node_modules/.prisma         ./node_modules/.prisma
-COPY --from=prod-deps /app/node_modules/pg              ./node_modules/pg
-COPY --from=prod-deps /app/node_modules/pg-pool         ./node_modules/pg-pool
-COPY --from=prod-deps /app/node_modules/pg-types        ./node_modules/pg-types
-COPY --from=prod-deps /app/node_modules/pgpass          ./node_modules/pgpass
-COPY --from=prod-deps /app/node_modules/pg-connection-string ./node_modules/pg-connection-string
-COPY --from=prod-deps /app/node_modules/dotenv          ./node_modules/dotenv
+# ── Copy production node modules from prod-deps (ensure paths exist)
+# Simpler and more robust than copying individual package subpaths which
+# may not exist in every npm install (avoids "not found" errors).
+COPY --from=prod-deps --chown=nextjs:nodejs /app/node_modules ./node_modules
 
 # Make prisma CLI runnable
 RUN ln -s /app/node_modules/prisma/build/index.js /usr/local/bin/prisma \
