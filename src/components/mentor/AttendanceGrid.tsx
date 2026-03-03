@@ -47,12 +47,15 @@ export default function AttendanceGrid({
   date, onDateChange, rows, onRowChange, onSave, unsavedCount, saving, loading,
 }: AttendanceGridProps) {
   const navigateDate = (direction: number) => {
-    const d = new Date(date)
-    d.setDate(d.getDate() + direction)
-    onDateChange(d.toISOString().split("T")[0])
+    const [y, m, d] = date.split("-").map(Number)
+    const nd = new Date(y, m - 1, d + direction)
+    onDateChange(`${nd.getFullYear()}-${String(nd.getMonth() + 1).padStart(2, "0")}-${String(nd.getDate()).padStart(2, "0")}`)
   }
 
-  const isToday = date === new Date().toISOString().split("T")[0]
+  const isToday = (() => {
+    const n = new Date()
+    return date === `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, "0")}-${String(n.getDate()).padStart(2, "0")}`
+  })()
 
   return (
     <div className="space-y-4">
@@ -64,7 +67,7 @@ export default function AttendanceGrid({
           </button>
           <div className="text-center">
             <span className="font-mono text-sm text-text-code">
-              {new Date(date).toLocaleDateString("es-ES", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+              {(() => { const [y,m,d] = date.split("-").map(Number); return new Date(y, m-1, d).toLocaleDateString("es-ES", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) })()}
             </span>
             {isToday && (
               <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-md bg-electric-500/15 text-electric-400 font-mono text-xs border border-electric-500/30">

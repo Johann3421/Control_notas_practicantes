@@ -29,8 +29,9 @@ export default function AttendanceMiniCalendar({
   startDate = records[0]?.date ?? new Date().toISOString().split('T')[0],
   endDate = records[records.length - 1]?.date ?? new Date().toISOString().split('T')[0],
 }: AttendanceMiniCalendarProps) {
-  const start = new Date(startDate)
-  const end = new Date(endDate)
+  const parseLocal = (s: string) => { const [y,m,d] = s.split("-").map(Number); return new Date(y, m-1, d) }
+  const start = parseLocal(startDate)
+  const end = parseLocal(endDate)
   const recordMap = new Map(records.map((r) => [r.date.split("T")[0], r]))
 
   // Generate months between start and end

@@ -18,7 +18,10 @@ interface InternRow {
 }
 
 export default function MentorAttendancePage() {
-  const [date, setDate] = useState(() => new Date().toISOString().split("T")[0])
+  const [date, setDate] = useState(() => {
+    const d = new Date()
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
+  })
   const [rows, setRows] = useState<InternRow[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
