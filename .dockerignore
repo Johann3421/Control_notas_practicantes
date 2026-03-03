@@ -1,0 +1,33 @@
+# ── Dev & system ──────────────────────────────────────────────────────────────
+.git
+.gitignore
+node_modules
+.next
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ── Environment (NEVER include secrets in image) ──────────────────────────────
+.env
+.env.*
+
+# ── Editor / OS ───────────────────────────────────────────────────────────────
+.DS_Store
+*.pem
+.vscode
+.idea
+
+# ── Testing / coverage ────────────────────────────────────────────────────────
+coverage
+__tests__
+
+# ── Misc local files ──────────────────────────────────────────────────────────
+cookies.txt
+csrf.json
+tmp_*.js
+fetch_auth.js
+RUN_LOCAL.md
+*.tsbuildinfo
+
+# ── Prisma generated (rebuilt during Docker build) ───────────────────────────
+src/generated

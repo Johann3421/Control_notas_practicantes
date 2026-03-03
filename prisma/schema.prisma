@@ -1,0 +1,293 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ==================== AUTH ====================
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  password      String
+  role          Role      @default(INTERN)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  internProfile   Intern?
+  mentorOf        Intern[]        @relation("MentorInterns")
+  accounts        Account[]
+  sessions        Session[]
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@map("sessions")
+}
+
+// ==================== PRACTICANTES ====================
+model Intern {
+  id              String    @id @default(cuid())
+  code            String    @unique
+  startDate       DateTime
+  endDate         DateTime
+  totalWeeks      Int       @default(12)
+  currentWeek     Int       @default(1)
+  stack           String[]
+  university      String?
+  career          String?
+  status          InternStatus @default(ACTIVE)
+  overallScore    Decimal   @db.Decimal(4, 2) @default(0)
+  promotionRecommendation PromotionStatus?
+  userId          String    @unique
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mentorId        String?
+  mentor          User?     @relation("MentorInterns", fields: [mentorId], references: [id])
+  attendance      AttendanceRecord[]
+  evaluations     WeeklyEvaluation[]
+  tasks           Task[]
+  learningGoals   LearningGoal[]
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([status])
+  @@index([mentorId])
+  @@map("interns")
+}
+
+// ==================== ASISTENCIA ====================
+model AttendanceRecord {
+  id          String           @id @default(cuid())
+  date        DateTime         @db.Date
+  status      AttendanceStatus
+  checkIn     DateTime?
+  checkOut    DateTime?
+  hoursWorked Decimal?         @db.Decimal(4, 2)
+  lateMinutes Int              @default(0)
+  notes       String?
+  recordedBy  String
+  internId    String
+  intern      Intern           @relation(fields: [internId], references: [id], onDelete: Cascade)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@unique([internId, date])
+  @@index([internId])
+  @@index([date])
+  @@map("attendance_records")
+}
+
+// ==================== EVALUACIONES SEMANALES ====================
+model WeeklyEvaluation {
+  id          String   @id @default(cuid())
+  weekNumber  Int
+  weekStart   DateTime @db.Date
+  weekEnd     DateTime @db.Date
+
+  codeQuality     Int
+  problemSolving  Int
+  gitUsage        Int
+  tooling         Int
+  codeReview      Int
+  architecture    Int
+
+  communication       Int
+  teamwork            Int
+  initiative          Int
+  timeManagement      Int
+  adaptability        Int
+  documentation       Int
+
+  techAverage     Decimal  @db.Decimal(4, 2)
+  softAverage     Decimal  @db.Decimal(4, 2)
+  overallAverage  Decimal  @db.Decimal(4, 2)
+
+  strengths       String
+  improvements    String
+  goals           String
+
+  // Custom skills config (overrides default 6+6 hardcoded columns)
+  // Stored as: { tech: [{label, description, score}], soft: [{label, description, score}] }
+  skillsData      Json?
+
+  relatedGoals    EvaluationGoal[]
+
+  internId        String
+  intern          Intern   @relation(fields: [internId], references: [id], onDelete: Cascade)
+  evaluatedBy     String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([internId, weekNumber])
+  @@index([internId])
+  @@map("weekly_evaluations")
+}
+
+// ==================== PLAN DE APRENDIZAJE ====================
+model LearningGoal {
+  id          String         @id @default(cuid())
+  title       String
+  description String?
+  category    GoalCategory
+  technology  String?
+  targetWeek  Int
+  status      GoalStatus     @default(PENDING)
+  priority    GoalPriority   @default(MEDIUM)
+  completedAt DateTime?
+  notes       String?
+  internId    String
+  intern      Intern         @relation(fields: [internId], references: [id], onDelete: Cascade)
+  evaluations EvaluationGoal[]
+  tasks       Task[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([internId])
+  @@index([status])
+  @@map("learning_goals")
+}
+
+model EvaluationGoal {
+  evaluationId   String
+  goalId         String
+  progressNote   String?
+  evaluation     WeeklyEvaluation @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+  goal           LearningGoal     @relation(fields: [goalId], references: [id], onDelete: Cascade)
+
+  @@id([evaluationId, goalId])
+  @@map("evaluation_goals")
+}
+
+// ==================== TAREAS ====================
+model Task {
+  id           String      @id @default(cuid())
+  title        String
+  description  String?
+  type         TaskType
+  priority     TaskPriority @default(MEDIUM)
+  status       TaskStatus  @default(TODO)
+  estimatedHours Decimal?  @db.Decimal(4, 1)
+  actualHours  Decimal?    @db.Decimal(4, 1)
+  dueDate      DateTime?
+  completedAt  DateTime?
+  feedback     String?
+  score        Int?
+  repositoryUrl String?
+  internId     String
+  intern       Intern      @relation(fields: [internId], references: [id], onDelete: Cascade)
+  goalId       String?
+  goal         LearningGoal? @relation(fields: [goalId], references: [id])
+  assignedBy   String
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@index([internId])
+  @@index([status])
+  @@map("tasks")
+}
+
+// ==================== ENUMS ====================
+enum Role {
+  INTERN
+  MENTOR
+  ADMIN
+}
+
+enum InternStatus {
+  ACTIVE
+  COMPLETED
+  DROPPED
+  EXTENDED
+}
+
+enum PromotionStatus {
+  PROMOTED
+  EXTENDED
+  GRADUATED
+  NOT_RECOMMENDED
+}
+
+enum AttendanceStatus {
+  PRESENT
+  LATE
+  ABSENT
+  JUSTIFIED_ABSENCE
+  HOLIDAY
+}
+
+enum GoalCategory {
+  TECHNICAL
+  SOFT_SKILL
+  PROJECT
+  PROCESS
+}
+
+enum GoalStatus {
+  NOT_STARTED
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  SKIPPED
+}
+
+enum GoalPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum TaskType {
+  FEATURE
+  BUG
+  BUG_FIX
+  LEARNING
+  RESEARCH
+  TESTING
+  CODE_REVIEW
+  DOCUMENTATION
+  MEETING
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+  CRITICAL
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  IN_REVIEW
+  DONE
+  BLOCKED
+}
