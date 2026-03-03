@@ -29,14 +29,6 @@ declare module "next-auth" {
   }
 }
 
-declare module "next-auth/jwt" {
-  interface JWT {
-    role: Role
-    id: string
-    internId: string | null
-  }
-}
-
 // Scoring types
 export interface SkillItem {
   label: string
