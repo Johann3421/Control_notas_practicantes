@@ -20,52 +20,20 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
-      const normalizedEmail = email.trim().toLowerCase()
+      const result = await signIn('credentials', {
+        email: email.trim().toLowerCase(),
+        password,
+        redirect: false,
+      })
 
-      // Ensure we have a fresh CSRF token (some browsers or contexts may not set the cookie automatically).
-      let csrfToken = undefined as string | undefined
-      try {
-        const res = await fetch('/api/auth/csrf', { credentials: 'include' })
-        const json = await res.json()
-        csrfToken = json?.csrfToken
-      } catch (err) {
-        // eslint-disable-next-line no-console
-        console.warn('Could not fetch CSRF token before signIn', err)
-      }
-
-      // Try manual POST to credentials callback to ensure cookies are sent
-      try {
-        const params = new URLSearchParams()
-        if (csrfToken) params.append('csrfToken', csrfToken)
-        params.append('email', normalizedEmail)
-        params.append('password', password)
-
-        const postRes = await fetch('/api/auth/callback/credentials', {
-          method: 'POST',
-          body: params,
-          credentials: 'include',
-        })
-
-        // Check session endpoint to confirm login succeeded
-        const sessionRes = await fetch('/api/auth/session', { credentials: 'include' })
-        const sessionJson = await sessionRes.json()
-        // (no debug logs)
-
-        if (sessionJson?.user?.email) {
-          router.push('/')
-          router.refresh()
-        } else {
-          // If manual POST didn't result in a session, fall back to signIn to get provider error
-          const fallback = await signIn('credentials', { email: normalizedEmail, password, csrfToken, redirect: false })
-          // (no debug logs)
-          setError(fallback?.error ?? 'Credenciales inválidas. Intenta de nuevo.')
-        }
-      } catch (err) {
-        // (no debug logs)
-        setError('Error al iniciar sesión. Intenta de nuevo más tarde.')
+      if (result?.ok && !result?.error) {
+        router.push('/')
+        router.refresh()
+      } else {
+        setError('Credenciales inválidas. Verifica tu email y contraseña.')
       }
     } catch {
-      setError("Error al conectar con el servidor.")
+      setError('Error al conectar con el servidor. Intenta de nuevo.')
     } finally {
       setLoading(false)
     }

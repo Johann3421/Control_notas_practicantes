@@ -10,12 +10,13 @@ export default function middleware(req: any) {
     return NextResponse.next()
   }
 
-  // Simple session presence check (dev): next-auth stores a session cookie when using JWT strategy
+  // Check for any known Auth.js / NextAuth session cookie.
+  // In production (HTTPS) Auth.js v5 prefixes cookies with __Secure-
+  // so we must match both forms.
   const cookieHeader = req.headers.get("cookie") || ""
-  // Accept either NextAuth (legacy) or Auth.js cookie names used by the project
-  const hasSessionCookie = /(^|; )(__Secure-)?next-auth\.session-token=/.test(cookieHeader)
-    || /(^|; )next-auth\.session-token=/.test(cookieHeader)
-    || /(^|; )authjs\.session-token=/.test(cookieHeader)
+  const hasSessionCookie =
+    /(^|; )(__Secure-)?authjs\.session-token=/.test(cookieHeader) ||
+    /(^|; )(__Secure-)?next-auth\.session-token=/.test(cookieHeader)
 
   if (!hasSessionCookie) {
     return NextResponse.redirect(new URL("/login", nextUrl))
