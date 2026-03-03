@@ -23,13 +23,19 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         if (!parsed.success) return null
 
         const email = parsed.data.email.trim().toLowerCase()
-        const user = await prisma.user.findUnique({
+          console.info('[auth] authorize: attempting sign-in for', email)
+          const user = await prisma.user.findUnique({
           where: { email },
           include: { internProfile: true },
         })
-        if (!user?.password) return null
+          console.info('[auth] authorize: user found?', !!user, 'id=', user?.id, 'role=', user?.role, 'hasPassword=', !!user?.password)
+          if (!user?.password) {
+            console.info('[auth] authorize: missing password for user', email)
+            return null
+          }
 
         const valid = await bcrypt.compare(parsed.data.password, user.password)
+        console.info('[auth] authorize: password valid?', valid)
         if (!valid) return null
 
         return {
