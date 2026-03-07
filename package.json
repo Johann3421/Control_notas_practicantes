@@ -9,6 +9,8 @@
     "start:prod": "node .next/standalone/server.js",
     "lint": "eslint",
     "seed": "tsx prisma/seed.ts",
+    "seed:add-admin": "tsx prisma/seed_add_admin.ts",
+    "transfer:admin": "tsx prisma/transfer_admin_ownership.ts",
     "db:push": "prisma db push",
     "db:generate": "prisma generate"
   },
