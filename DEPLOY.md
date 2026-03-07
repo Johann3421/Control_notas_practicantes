@@ -115,6 +115,15 @@ docker compose exec app sh -c "npm run seed"
 
 Esto crea el usuario mentor inicial con las credenciales definidas en `prisma/seed.ts`.
 
+Credenciales incluidas por el seed (ejemplo):
+
+- Admin:    admin@devtrack.com         / password123
+- Admin:    loritox3421@gmail.com      / podereterno1
+- Mentor 1: carlos@devtrack.com       / password123
+- Mentor 2: laura@devtrack.com        / password123
+- Intern:   maria@devtrack.com        / password123
+
+
 ---
 
 ## Actualizar la aplicación

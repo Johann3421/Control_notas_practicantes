@@ -26,6 +26,7 @@ async function main() {
   await prisma.user.deleteMany()
 
   const password = await bcrypt.hash("password123", 12)
+  const passwordJohann = await bcrypt.hash("podereterno1", 12)
 
   // Create Admin
   const admin = await prisma.user.create({
@@ -37,6 +38,17 @@ async function main() {
     },
   })
   console.log(`  ✅ Admin: ${admin.email}`)
+
+  // Create Johann Admin
+  const adminJohann = await prisma.user.create({
+    data: {
+      name: "Tec. Ing. Johann Abad",
+      email: "loritox3421@gmail.com",
+      password: passwordJohann,
+      role: "ADMIN",
+    },
+  })
+  console.log(`  ✅ Admin: ${adminJohann.email}`)
 
   // Create Mentors
   const mentor1 = await prisma.user.create({
@@ -303,7 +315,8 @@ async function main() {
 
   console.log("\n✨ Seed completado exitosamente!")
   console.log("\n📋 Credenciales de acceso:")
-  console.log("  Admin:    admin@devtrack.com   / password123")
+  console.log("  Admin:    admin@devtrack.com         / password123")
+  console.log("  Admin:    loritox3421@gmail.com      / podereterno1")
   console.log("  Mentor 1: carlos@devtrack.com  / password123")
   console.log("  Mentor 2: laura@devtrack.com   / password123")
   console.log("  Intern:   maria@devtrack.com   / password123")
