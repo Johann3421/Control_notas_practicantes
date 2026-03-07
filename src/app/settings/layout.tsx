@@ -9,7 +9,8 @@ export default async function SettingsLayout({ children }: { children: React.Rea
 
   const backHref =
     session.user.role === "INTERN" ? "/intern" :
-    session.user.role === "ADMIN" ? "/admin" :
+    // Admins share the mentor dashboard
+    session.user.role === "ADMIN" ? "/mentor" :
     "/mentor"
 
   return (
